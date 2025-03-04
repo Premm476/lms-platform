@@ -54,33 +54,34 @@ export default function ReactJsCourse() {
 
       {/* ✅ React.js Course Hero Section */}
       <section className="flex flex-col items-center justify-center text-center pt-32 pb-20 px-6">
-        <motion.h1
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-          className="text-5xl font-extrabold text-white"
-        >
-          🚀 Master React.js
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1.2 }}
-          className="mt-4 text-xl text-gray-200 max-w-3xl"
-        >
-          Learn to build modern, dynamic, and high-performance web applications
-          using **React.js**. From **state management** to **hooks & API
-          integration**, this course covers everything!
-        </motion.p>
-        <motion.img
-          src="/images/react-banner.png"
-          alt="React Course"
-          className="mt-8 w-96 rounded-xl shadow-2xl"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 1.5 }}
-        />
-      </section>
+  <motion.h1
+    initial={{ opacity: 0, y: -50 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 1 }}
+    className="text-5xl font-extrabold text-white"
+  >
+    🚀 Master React.js
+  </motion.h1>
+  <motion.p
+    initial={{ opacity: 0, x: -50 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ duration: 1.2 }}
+    className="mt-4 text-xl text-gray-200 max-w-3xl"
+  >
+    Learn to build modern, dynamic, and high-performance web applications using{" "}
+    <strong>React.js</strong>. From <strong>state management</strong> to{" "}
+    <strong>hooks & API integration</strong>, this course covers everything!
+  </motion.p>
+  <motion.img
+    src="/images/reactbanner.jpg"
+    alt="React Course"
+    className="mt-8 w-[192px] h-[192px] rounded-xl shadow-2xl object-cover"
+    initial={{ scale: 0.8, opacity: 0 }}
+    animate={{ scale: 1, opacity: 1 }}
+    transition={{ duration: 1.5 }}
+  />
+</section>
+
 
       {/* ✅ Course Modules */}
       <section className="bg-white text-gray-900 py-20 px-6 rounded-t-3xl">

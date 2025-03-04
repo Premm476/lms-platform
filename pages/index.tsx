@@ -5,6 +5,9 @@ import { motion } from 'framer-motion';
 import Link from "next/link";
 import { useState } from "react"; // Import React state
 
+
+
+
 export default function Home() {
   // State to track open FAQ
   const [openIndex, setOpenIndex] = useState(null);

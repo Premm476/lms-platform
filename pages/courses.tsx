@@ -14,7 +14,7 @@ const courses = [
   { id: "data-science", title: "Data Science & Analytics", image: "/images/06.jpg", price: 1999 },
   { id: "cybersecurity", title: "Cybersecurity", image: "/images/07.jpg", price: 3999 },
   { id: "blockchain", title: "Blockchain & Web3", image: "/images/08.jpg", price: 1999 },
-  { id: "robotics", title: "Robotics & Automation", image: "/images/02.jpg", price: 3999 },
+  { id: "robotics", title: "Robotics & Automation", image: "/images/09.jpg", price: 3999 },
 ];
 
 export default function Courses() {

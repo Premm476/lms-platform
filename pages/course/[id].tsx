@@ -13,18 +13,18 @@ const courses = [
   { id: "data-science", title: "Data Science & Analytics", description: "Analyze data and extract insights using Python, R, and SQL.", price: 1999, image: "/images/06.jpg" },
   { id: "cybersecurity", title: "Cybersecurity", description: "Learn cybersecurity fundamentals, ethical hacking, and network security.", price: 3999, image: "/images/07.jpg" },
   { id: "blockchain", title: "Blockchain & Web3", description: "Explore blockchain technology, smart contracts, and Web3 development.", price: 1999, image: "/images/08.jpg" },
-  { id: "robotics", title: "Robotics & Automation", description: "Get hands-on experience in robotics, automation, and IoT.", price: 3999, image: "/images/0.jpg" },
+  { id: "robotics", title: "Robotics & Automation", description: "Get hands-on experience in robotics, automation, and IoT.", price: 3999, image: "/images/09.jpg" },
 ];
 
 export default function CourseDetails() {
-  const { id } = useParams();
+  const params = useParams();
   const router = useRouter();
 
-  if (!id) {
+  if (!params || !params.id || typeof params.id !== "string") {
     return <div className="min-h-screen flex justify-center items-center text-white">Loading...</div>;
   }
 
-  const course = courses.find((c) => c.id === id);
+  const course = courses.find((c) => c.id === params.id);
 
   if (!course) {
     return (
@@ -35,7 +35,7 @@ export default function CourseDetails() {
         <h1 className="text-3xl font-bold text-red-500">404 - Course Not Found</h1>
         <button
           onClick={() => router.push("/courses")}
-          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg"
+          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all"
         >
           Back to Courses
         </button>
@@ -64,14 +64,14 @@ export default function CourseDetails() {
 
       <button
         onClick={() => alert(`Enrolled in ${course.title}!`)}
-        className="mt-6 bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+        className="mt-6 bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all"
       >
         Enroll Now
       </button>
 
       <button
         onClick={() => router.push("/courses")}
-        className="mt-4 text-gray-300 hover:text-yellow-300"
+        className="mt-4 text-gray-300 hover:text-yellow-300 transition-all"
       >
         ← Back to Courses
       </button>
