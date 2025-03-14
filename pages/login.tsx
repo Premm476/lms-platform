@@ -1,9 +1,9 @@
 "use client";
-
+import Image from "next/image";
 import Head from "next/head";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, ChangeEvent } from "react"; // Import ChangeEvent
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -14,12 +14,12 @@ export default function Login() {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => { // Explicitly type the event
     const { name, value, type, checked } = e.target;
     setFormData({ ...formData, [name]: type === "checkbox" ? checked : value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => { // Explicitly type the event
     e.preventDefault();
     alert("Login successful! ✅");
   };
@@ -51,14 +51,31 @@ export default function Login() {
           </Link>
 
           {/* Hamburger Menu */}
-          <button onClick={toggleMenu} className="md:hidden text-gray-900 focus:outline-none">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
+          <button
+            onClick={toggleMenu}
+            className="md:hidden text-gray-900 focus:outline-none"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 6h16M4 12h16m-7 6h7"
+              />
             </svg>
           </button>
 
           {/* Navigation Links */}
-          <ul className={`md:flex space-x-4 items-center ${isMenuOpen ? "block" : "hidden"}`}>
+          <ul
+            className={`md:flex space-x-4 items-center ${
+              isMenuOpen ? "block" : "hidden"
+            }`}
+          >
             {[
               { name: "Home", link: "/", type: "text" },
               { name: "Courses", link: "/courses", type: "text" },
@@ -102,7 +119,7 @@ export default function Login() {
 
       {/* Hero Section */}
       <section className="container mx-auto px-6 py-16 text-center mt-20">
-        <motion.h1 
+        <motion.h1
           className="text-5xl font-extrabold text-gray-900"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -118,7 +135,7 @@ export default function Login() {
       {/* Login Form */}
       <section className="container mx-auto px-6 py-8 max-w-md bg-white shadow-lg rounded-lg p-8">
         <form onSubmit={handleSubmit}>
-          <motion.div 
+          <motion.div
             className="mb-4"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -136,7 +153,7 @@ export default function Login() {
             />
           </motion.div>
 
-          <motion.div 
+          <motion.div
             className="mb-4"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -154,7 +171,7 @@ export default function Login() {
             />
           </motion.div>
 
-          <motion.div 
+          <motion.div
             className="mb-4 flex items-center justify-between"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -170,7 +187,9 @@ export default function Login() {
               />
               Remember Me
             </label>
-            <a href="#" className="text-purple-600 hover:underline">Forgot Password?</a>
+            <a href="#" className="text-purple-600 hover:underline">
+              Forgot Password?
+            </a>
           </motion.div>
 
           <motion.button
@@ -183,7 +202,10 @@ export default function Login() {
           </motion.button>
 
           <p className="text-center text-gray-700 mt-4">
-            Don't have an account? <Link href="/signup" className="text-purple-600 hover:underline">Sign Up</Link>
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="text-purple-600 hover:underline">
+              Sign Up
+            </Link>
           </p>
 
           {/* OR Divider */}
@@ -196,12 +218,20 @@ export default function Login() {
           {/* Social Login Buttons */}
           <div className="space-y-4">
             <button className="w-full flex items-center justify-center bg-white border border-gray-300 rounded-lg py-2 shadow-md hover:bg-gray-100 transition-all">
-              <img src="/images/google.jpg" alt="Google" className="w-6 h-6 mr-2" />
+              <Image
+                src="/images/google.jpg"
+                alt="Google"
+                className="w-6 h-6 mr-2"
+              />
               Continue with Google
             </button>
 
             <button className="w-full flex items-center justify-center bg-gray-900 text-white rounded-lg py-2 shadow-md hover:bg-gray-800 transition-all">
-              <img src="/images/github.jpg" alt="GitHub" className="w-6 h-6 mr-2" />
+              <Image
+                src="/images/github.jpg"
+                alt="GitHub"
+                className="w-6 h-6 mr-2"
+              />
               Continue with GitHub
             </button>
           </div>

@@ -1,9 +1,9 @@
 "use client";
-
+import Image from "next/image";
 import Head from "next/head";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, ChangeEvent } from "react"; // Import ChangeEvent
 
 export default function Signup() {
   const [formData, setFormData] = useState({
@@ -16,12 +16,12 @@ export default function Signup() {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => { // Explicitly type the event
     const { name, value, type, checked } = e.target;
     setFormData({ ...formData, [name]: type === "checkbox" ? checked : value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => { // Explicitly type the event
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match! ❌");
@@ -235,12 +235,12 @@ export default function Signup() {
           {/* Social Signup Buttons */}
           <div className="space-y-4">
             <button className="w-full flex items-center justify-center bg-white border border-gray-300 rounded-lg py-2 shadow-md hover:bg-gray-100 transition-all">
-              <img src="/google-logo.png" alt="Google" className="w-6 h-6 mr-2" />
+              <Image src="/google-logo.png" alt="Google" className="w-6 h-6 mr-2" />
               Sign Up with Google
             </button>
 
             <button className="w-full flex items-center justify-center bg-gray-900 text-white rounded-lg py-2 shadow-md hover:bg-gray-800 transition-all">
-              <img src="/github-logo.png" alt="GitHub" className="w-6 h-6 mr-2" />
+              <Image src="/github-logo.png" alt="GitHub" className="w-6 h-6 mr-2" />
               Sign Up with GitHub
             </button>
           </div>

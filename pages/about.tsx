@@ -6,12 +6,12 @@ import Link from "next/link";
 import { useState } from "react";
 
 export default function About() {
-  const [openIndex, setOpenIndex] = useState(null);
+  // const [openIndex, setOpenIndex] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const toggleAnswer = (index) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
+  // const toggleAnswer = (index) => {
+  //   setOpenIndex(openIndex === index ? null : index);
+  // };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);

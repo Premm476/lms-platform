@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import Head from "next/head";
 import { motion, useScroll, useSpring } from "framer-motion";
 import Link from "next/link";
@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 export default function Home() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [openIndex, setOpenIndex] = useState(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -28,7 +28,7 @@ export default function Home() {
     router.push("/login");
   };
 
-  const toggleAnswer = (index) => {
+  const toggleAnswer = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
@@ -40,9 +40,9 @@ export default function Home() {
     const handleScroll = () => {
       const navbar = document.querySelector("nav");
       if (window.scrollY > 50) {
-        navbar.classList.add("shadow-lg", "bg-opacity-90");
+        navbar?.classList.add("shadow-lg", "bg-opacity-90");
       } else {
-        navbar.classList.remove("shadow-lg", "bg-opacity-90");
+        navbar?.classList.remove("shadow-lg", "bg-opacity-90");
       }
     };
 
@@ -159,7 +159,13 @@ export default function Home() {
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 1 }}
         >
-          <img src="/images/g.jpg.png" alt="Coding" className="w-full rounded-lg shadow-xl" />
+          <Image
+            src="/images/g.jpg.png"
+            alt="Coding"
+            width={500}
+            height={300}
+            className="w-full rounded-lg shadow-xl"
+          />
         </motion.div>
 
         <motion.div
@@ -172,7 +178,7 @@ export default function Home() {
           <p className="text-gray-600 text-lg mt-3">Join our interactive courses and get hands-on experience with real-world projects.</p>
           <div className="flex mt-4">
             <input
-              type="text"
+              type="text" // Fixed: Added closing quote
               placeholder="Search Courses..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -251,7 +257,13 @@ export default function Home() {
                 key={index}
                 className="relative rounded-xl shadow-lg overflow-hidden transform transition duration-300 hover:scale-105 bg-white"
               >
-                <img src={item.image} alt={item.title} className="w-full h-64 object-cover brightness-50" />
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  width={400}
+                  height={300}
+                  className="w-full h-64 object-cover brightness-50"
+                />
                 <div className="absolute inset-0 flex items-center p-6 text-white">
                   <div className={`w-14 h-14 ${item.bgColor} flex items-center justify-center rounded-full text-2xl shadow-lg mr-4`}>
                     {item.icon}

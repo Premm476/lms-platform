@@ -14,11 +14,11 @@ export default function Contact() {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     alert("Your message has been sent! ✅");
   };
@@ -167,7 +167,6 @@ export default function Contact() {
               required
               className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               placeholder="Your Message"
-              
             ></textarea>
           </motion.div>
 
