@@ -221,6 +221,8 @@ export default function Login() {
               <Image
                 src="/images/google.jpg"
                 alt="Google"
+                width={24} // Add width
+                height={24} // Add height
                 className="w-6 h-6 mr-2"
               />
               Continue with Google
@@ -230,6 +232,8 @@ export default function Login() {
               <Image
                 src="/images/github.jpg"
                 alt="GitHub"
+                width={24} // Add width
+                height={24} // Add height
                 className="w-6 h-6 mr-2"
               />
               Continue with GitHub

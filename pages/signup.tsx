@@ -235,12 +235,24 @@ export default function Signup() {
           {/* Social Signup Buttons */}
           <div className="space-y-4">
             <button className="w-full flex items-center justify-center bg-white border border-gray-300 rounded-lg py-2 shadow-md hover:bg-gray-100 transition-all">
-              <Image src="/google-logo.png" alt="Google" className="w-6 h-6 mr-2" />
+              <Image
+                src="/images/google.jpg"
+                alt="Google"
+                width={24} // Add width
+                height={24} // Add height
+                className="w-6 h-6 mr-2"
+              />
               Sign Up with Google
             </button>
 
             <button className="w-full flex items-center justify-center bg-gray-900 text-white rounded-lg py-2 shadow-md hover:bg-gray-800 transition-all">
-              <Image src="/github-logo.png" alt="GitHub" className="w-6 h-6 mr-2" />
+              <Image
+                src="/images/github.jpg"
+                alt="GitHub"
+                width={24} // Add width
+                height={24} // Add height
+                className="w-6 h-6 mr-2"
+              />
               Sign Up with GitHub
             </button>
           </div>
