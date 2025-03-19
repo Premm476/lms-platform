@@ -13,14 +13,47 @@ export default function Contact() {
   });
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(""); // Add error state
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    alert("Your message has been sent! ✅");
+    setIsSubmitting(true);
+    setError(""); // Clear previous errors
+
+    try {
+      const response = await fetch("/api/sendEmail", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json(); // Parse the response
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send email");
+      }
+
+      alert("Your message has been sent! ✅");
+      setFormData({ name: "", email: "", message: "" }); // Clear the form
+    } catch (error) {
+      console.error("Error:", error);
+
+      // Check if the error is an instance of Error
+      if (error instanceof Error) {
+        setError(error.message || "Failed to send message. Please try again later.");
+      } else {
+        setError("Failed to send message. Please try again later.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const toggleMenu = () => {
@@ -170,13 +203,26 @@ export default function Contact() {
             ></textarea>
           </motion.div>
 
+          {/* Error Message */}
+          {error && (
+            <motion.div
+              className="mb-4 text-red-600 font-semibold"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {error}
+            </motion.div>
+          )}
+
           <motion.button
             type="submit"
             className="w-full bg-purple-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-purple-700 transition-all"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            disabled={isSubmitting}
           >
-            Send Message
+            {isSubmitting ? "Sending..." : "Send Message"}
           </motion.button>
         </form>
       </section>
