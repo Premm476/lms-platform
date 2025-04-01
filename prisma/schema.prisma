@@ -1,7 +1,6 @@
 // ========== CONFIGURATION ==========
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["filterJson"]
 }
 
 datasource db {
@@ -68,6 +67,9 @@ model User {
   reviews          CourseReview[]
   discussions      Discussion[]
   replies          DiscussionReply[]
+  verificationTokens VerificationToken[]
+  passwordResetTokens PasswordResetToken[]
+  quizAttempts     QuizAttempt[]
 
   @@index([email])
   @@map("users")
@@ -192,7 +194,8 @@ model Lesson {
   moduleId         String
   progress         UserProgress[]
   resources        LessonResource[]
-  quiz             Quiz?
+  quiz             Quiz?          
+  quizId           String?        @unique
 
   @@index([moduleId])
   @@map("lessons")
@@ -344,8 +347,8 @@ model Quiz {
   updatedAt        DateTime        @updatedAt
 
   // Relations
-  lesson           Lesson?         @relation(fields: [lessonId], references: [id])
-  lessonId         String?
+  lesson           Lesson?         @relation(fields: [lessonId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lessonId         String?         @unique
   course           Course          @relation(fields: [courseId], references: [id])
   courseId         String
   questions        QuizQuestion[]
