@@ -24,7 +24,7 @@ export default function AIMLCourse() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
 
-      {/* ✅ Navbar */}
+      {/* Navbar */}
       <nav className="bg-black bg-opacity-70 p-4 fixed top-0 left-0 w-full shadow-lg z-50">
         <div className="container mx-auto flex justify-between items-center">
           <Link href="/" className="text-3xl font-extrabold text-yellow-400">
@@ -52,7 +52,7 @@ export default function AIMLCourse() {
         </div>
       </nav>
 
-      {/* ✅ AI & ML Course Hero Section */}
+      {/* AI & ML Course Hero Section */}
       <section className="flex flex-col items-center justify-center text-center pt-32 pb-20 px-6">
         <motion.h1
           initial={{ opacity: 0, y: -50 }}
@@ -73,14 +73,14 @@ export default function AIMLCourse() {
         <motion.img
           src="/images/ai.jpg"
           alt="AI & ML Course"
-          className="mt-8 w-[192px] h-[192px] rounded-xl shadow-2xl object-cover"
-    initial={{ scale: 0.8, opacity: 0 }}
-    animate={{ scale: 1, opacity: 1 }}
-    transition={{ duration: 1.5 }}
+          className="mt-8 w-48 h-48 rounded-xl shadow-2xl object-cover"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.5 }}
         />
       </section>
 
-      {/* ✅ Course Modules */}
+      {/* Course Modules */}
       <section className="bg-white text-gray-900 py-20 px-6 rounded-t-3xl">
         <h2 className="text-4xl font-extrabold text-center text-indigo-700">
           📖 Course Modules
@@ -110,7 +110,7 @@ export default function AIMLCourse() {
         </div>
       </section>
 
-      {/* ✅ Enroll Now */}
+      {/* Enroll Now */}
       <section className="bg-black text-white text-center py-20 px-6">
         <h2 className="text-5xl font-extrabold text-yellow-400">
           🎓 Get Started Today!

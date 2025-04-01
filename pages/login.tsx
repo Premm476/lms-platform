@@ -1,27 +1,90 @@
 "use client";
-import Image from "next/image";
+import { useState, ChangeEvent, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
 import Head from "next/head";
-import { motion } from "framer-motion";
 import Link from "next/link";
-import { useState, ChangeEvent } from "react"; // Import ChangeEvent
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { FiAlertCircle, FiEye, FiEyeOff, FiCheckCircle } from "react-icons/fi";
+
+interface FormData {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+}
 
 export default function Login() {
-  const [formData, setFormData] = useState({
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
     rememberMe: false,
   });
-
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => { // Explicitly type the event
+  // Check for registration success message
+  useEffect(() => {
+    if (searchParams.get("registered") === "true") {
+      const email = searchParams.get("email");
+      if (email) {
+        setRegisteredEmail(decodeURIComponent(email));
+        setFormData(prev => ({ ...prev, email: decodeURIComponent(email) }));
+      }
+    }
+  }, [searchParams]);
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData({ ...formData, [name]: type === "checkbox" ? checked : value });
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+    if (error) setError("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => { // Explicitly type the event
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Login successful! ✅");
+    setError("");
+    setLoading(true);
+
+    try {
+      const result = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        throw new Error(result.error);
+      }
+
+      // Redirect based on role (updated to match your dashboard structure)
+      if (result?.url) {
+        const callbackUrl = new URL(result.url);
+        const role = callbackUrl.searchParams.get("role");
+        
+        if (role === "instructor") {
+          router.push("/dashboard/instructor");
+        } else if (role === "admin") {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard/student");
+        }
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed. Please check your credentials.");
+      console.error("Login error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleMenu = () => {
@@ -29,53 +92,43 @@ export default function Login() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-100 to-purple-200 min-h-screen flex flex-col">
+    <div className="bg-gradient-to-br from-blue-100 to-purple-200 min-h-screen">
       <Head>
         <title>Login - E-Learning Platform</title>
+        <meta name="description" content="Login to access your courses and learning materials" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
 
       {/* Navbar */}
       <nav className="fixed top-0 left-0 w-full bg-gray-200 bg-opacity-75 backdrop-blur-md z-40 transition-all duration-300 h-12 flex items-center justify-center">
         <div className="container mx-auto flex justify-between items-center px-6">
-          {/* Logo with Animation and Redirect */}
           <Link href="/" className="flex items-center">
-            <motion.img
-              src="/images/elearning.jpg.png"
-              alt="E-Learning Logo"
-              className="w-24 h-auto transition-transform duration-300 hover:scale-110 cursor-pointer"
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1 }}
-            />
+            >
+              <Image
+                src="/images/elearning.jpg.png"
+                alt="E-Learning Logo"
+                width={96}
+                height={48}
+                className="w-24 h-auto transition-transform duration-300 hover:scale-110 cursor-pointer"
+              />
+            </motion.div>
           </Link>
 
-          {/* Hamburger Menu */}
-          <button
-            onClick={toggleMenu}
+          <button 
+            onClick={toggleMenu} 
             className="md:hidden text-gray-900 focus:outline-none"
+            aria-label="Toggle menu"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M4 6h16M4 12h16m-7 6h7"
-              />
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
             </svg>
           </button>
 
-          {/* Navigation Links */}
-          <ul
-            className={`md:flex space-x-4 items-center ${
-              isMenuOpen ? "block" : "hidden"
-            }`}
-          >
+          <ul className={`md:flex space-x-4 items-center ${isMenuOpen ? "block absolute top-12 left-0 right-0 bg-gray-200 bg-opacity-90 backdrop-blur-md py-4 px-6" : "hidden"}`}>
             {[
               { name: "Home", link: "/", type: "text" },
               { name: "Courses", link: "/courses", type: "text" },
@@ -84,31 +137,50 @@ export default function Login() {
               { name: "Login", link: "/login", type: "button" },
               { name: "Sign Up", link: "/signup", type: "button" },
             ].map((item, index) => (
-              <li key={index}>
+              <li key={index} className="my-2 md:my-0">
                 {item.type === "button" ? (
-                  <Link href={item.link}>
-                    <motion.button
-                      className="bg-blue-600 text-white px-4 py-1 rounded-lg font-semibold shadow-md transition-all duration-300 hover:bg-blue-500 hover:shadow-xl hover:scale-105 active:bg-gray-500 active:scale-95"
+                  <Link href={item.link} passHref>
+                    <motion.div
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      {item.name}
-                    </motion.button>
+                      <button className="bg-blue-600 text-white px-4 py-1 rounded-lg font-semibold shadow-md transition-all duration-300 hover:bg-blue-500 hover:shadow-xl active:bg-gray-500">
+                        {item.name}
+                      </button>
+                    </motion.div>
                   </Link>
                 ) : (
-                  <Link href={item.link}>
-                    <motion.div
-                      className="relative text-gray-900 font-bold hover:text-blue-600 transition-all duration-300"
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <span className="relative inline-block">
+                  <Link href={item.link} passHref>
+                    <div className="relative">
+                      <motion.span
+                        style={{ 
+                          color: '#1a202c', 
+                          fontWeight: 'bold', 
+                          display: 'block',
+                          position: 'relative'
+                        }}
+                        whileHover={{ 
+                          scale: 1.05,
+                          color: "#3b82f6"
+                        }}
+                      >
                         {item.name}
-                        <motion.span
-                          className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300"
-                          whileHover={{ width: "100%" }}
-                        />
-                      </span>
-                    </motion.div>
+                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600">
+                          <motion.span
+                            style={{
+                              position: 'absolute',
+                              bottom: 0,
+                              left: 0,
+                              width: '0%',
+                              height: '2px',
+                              backgroundColor: '#3b82f6'
+                            }}
+                            whileHover={{ width: '100%' }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        </span>
+                      </motion.span>
+                    </div>
                   </Link>
                 )}
               </li>
@@ -117,130 +189,194 @@ export default function Login() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="container mx-auto px-6 py-16 text-center mt-20">
-        <motion.h1
-          className="text-5xl font-extrabold text-gray-900"
-          initial={{ opacity: 0, y: -20 }}
+      {/* Main Content */}
+      <main className="container mx-auto px-6 pt-32 pb-16">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
+          transition={{ duration: 0.5 }}
+          className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden p-8"
         >
-          Welcome Back to <span className="text-purple-600">E-Learning</span>
-        </motion.h1>
-        <p className="mt-4 text-lg text-gray-700 max-w-2xl mx-auto">
-          Login to access your courses, track progress, and continue learning!
-        </p>
-      </section>
+          <div className="text-center mb-8">
+            <motion.h1 
+              className="text-3xl font-bold text-gray-800"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              Welcome Back
+            </motion.h1>
+            <motion.p 
+              className="mt-2 text-gray-600"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              Please enter your credentials to login
+            </motion.p>
+          </div>
 
-      {/* Login Form */}
-      <section className="container mx-auto px-6 py-8 max-w-md bg-white shadow-lg rounded-lg p-8">
-        <form onSubmit={handleSubmit}>
-          <motion.div
-            className="mb-4"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <label className="block text-gray-700 font-bold">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="Enter your email"
-            />
-          </motion.div>
+          {/* Status Messages */}
+          {registeredEmail && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-start"
+            >
+              <FiCheckCircle className="mt-0.5 mr-2 flex-shrink-0" />
+              <span>Registration successful! Please log in with your email.</span>
+            </motion.div>
+          )}
 
-          <motion.div
-            className="mb-4"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <label className="block text-gray-700 font-bold">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="Enter your password"
-            />
-          </motion.div>
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-start"
+            >
+              <FiAlertCircle className="mt-0.5 mr-2 flex-shrink-0" />
+              <span>{error}</span>
+            </motion.div>
+          )}
 
-          <motion.div
-            className="mb-4 flex items-center justify-between"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <label className="flex items-center">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email Address
+              </label>
               <input
-                type="checkbox"
-                name="rememberMe"
-                checked={formData.rememberMe}
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
                 onChange={handleChange}
-                className="mr-2"
+                placeholder="your@email.com"
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
               />
-              Remember Me
-            </label>
-            <a href="#" className="text-purple-600 hover:underline">
-              Forgot Password?
-            </a>
-          </motion.div>
+            </div>
 
-          <motion.button
-            type="submit"
-            className="w-full bg-purple-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-purple-700 transition-all"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Login
-          </motion.button>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
+              </div>
+            </div>
 
-          <p className="text-center text-gray-700 mt-4">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-purple-600 hover:underline">
-              Sign Up
-            </Link>
-          </p>
+            <div className="flex items-center justify-between">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="rememberMe"
+                  checked={formData.rememberMe}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700">Remember me</span>
+              </label>
 
-          {/* OR Divider */}
-          <div className="flex items-center my-6">
-            <hr className="flex-grow border-gray-300" />
-            <span className="px-3 text-gray-500">OR</span>
-            <hr className="flex-grow border-gray-300" />
+              <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-500 underline">
+                Forgot password?
+              </Link>
+            </div>
+
+            <div>
+              <motion.button
+                type="submit"
+                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 transition"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing in...
+                  </>
+                ) : "Sign in"}
+              </motion.button>
+            </div>
+          </form>
+
+          {/* Social Login */}
+          <div className="mt-8">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or sign in with</span>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <motion.button
+                type="button"
+                onClick={() => signIn("google")}
+                className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Image
+                  src="/images/google.jpg"
+                  alt="Google"
+                  width={20}
+                  height={20}
+                  className="h-5 w-5"
+                />
+                <span className="ml-2">Google</span>
+              </motion.button>
+              <motion.button
+                type="button"
+                onClick={() => signIn("github")}
+                className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-gray-800 text-sm font-medium text-white hover:bg-gray-700 transition"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Image
+                  src="/images/github.jpg"
+                  alt="GitHub"
+                  width={20}
+                  height={20}
+                  className="h-5 w-5"
+                />
+                <span className="ml-2">GitHub</span>
+              </motion.button>
+            </div>
           </div>
 
-          {/* Social Login Buttons */}
-          <div className="space-y-4">
-            <button className="w-full flex items-center justify-center bg-white border border-gray-300 rounded-lg py-2 shadow-md hover:bg-gray-100 transition-all">
-              <Image
-                src="/images/google.jpg"
-                alt="Google"
-                width={24} // Add width
-                height={24} // Add height
-                className="w-6 h-6 mr-2"
-              />
-              Continue with Google
-            </button>
-
-            <button className="w-full flex items-center justify-center bg-gray-900 text-white rounded-lg py-2 shadow-md hover:bg-gray-800 transition-all">
-              <Image
-                src="/images/github.jpg"
-                alt="GitHub"
-                width={24} // Add width
-                height={24} // Add height
-                className="w-6 h-6 mr-2"
-              />
-              Continue with GitHub
-            </button>
+          <div className="mt-8 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{' '}
+              <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500 underline">
+                Sign up
+              </Link>
+            </p>
           </div>
-        </form>
-      </section>
+        </motion.div>
+      </main>
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white text-center p-4 mt-12">

@@ -1,24 +1,58 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "esnext",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler", // Updated for modern resolution
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
-    }
+      "@/*": ["./*"],
+      "@components/*": ["./components/*"], // Explicit component aliases
+      "@lib/*": ["./lib/*"] // Utility/library aliases
+    },
+    "incremental": true,
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types",
+      "./types" // Additional type directory
+    ],
+    "types": ["node", "jest"], // Added jest if testing
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitAny": false, // Explicitly disabled for gradual typing
+    "allowSyntheticDefaultImports": true,
+    "plugins": [ // Optional for better DX
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js", // Include JS files if migrating
+    "**/*.jsx",
+    "src/types/**/*",
+    "types/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/__tests__/**", // Exclude test directories
+    "**/__mocks__/**",
+    ".next", // Exclude build output
+    "dist"
+  ]
 }

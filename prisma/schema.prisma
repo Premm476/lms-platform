@@ -1,25 +1,391 @@
+// ========== CONFIGURATION ==========
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["filterJson"]
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
+// ========== ENUMS ==========
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum CourseCategory {
+  WEB_DEVELOPMENT
+  DATA_SCIENCE
+  AI_ML
+  CYBERSECURITY
+  CLOUD_COMPUTING
+  BLOCKCHAIN
+  MOBILE_DEVELOPMENT
+  PROGRAMMING_LANGUAGES
+  SOFTWARE_TESTING
+  DEVOPS
+}
+
+// ========== AUTH MODELS ==========
 model User {
-  id       Int    @id @default(autoincrement())
-  name     String
-  email    String @unique
-  password String
-  courses  Course[]
+  id               String               @id @default(uuid())
+  name             String               @db.VarChar(100)
+  email            String               @unique @db.VarChar(255)
+  emailVerified    Boolean              @default(false)
+  password         String               @db.VarChar(255)
+  role             Role                 @default(STUDENT)
+  agreedToTerms    Boolean              @default(false)
+  avatar           String?              @db.VarChar(255)
+  bio              String?              @db.Text
+  verificationToken String?             @db.VarChar(255)
+  resetToken       String?              @db.VarChar(255)
+  resetTokenExpires DateTime?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  deletedAt        DateTime?
+
+  // Relations
+  enrollments      CourseEnrollment[]
+  taughtCourses    Course[]             @relation("InstructorCourses")
+  progress         UserProgress[]
+  certificates     Certificate[]
+  reviews          CourseReview[]
+  discussions      Discussion[]
+  replies          DiscussionReply[]
+
+  @@index([email])
+  @@map("users")
 }
 
+model VerificationToken {
+  id       String   @id @default(uuid())
+  token    String   @unique @db.VarChar(255)
+  expires  DateTime
+  user     User     @relation(fields: [userId], references: [id])
+  userId   String
+
+  @@map("verification_tokens")
+}
+
+model PasswordResetToken {
+  id       String   @id @default(uuid())
+  token    String   @unique @db.VarChar(255)
+  expires  DateTime
+  user     User     @relation(fields: [userId], references: [id])
+  userId   String
+
+  @@map("password_reset_tokens")
+}
+
+// ========== COURSE MODELS ==========
 model Course {
-  id          Int    @id @default(autoincrement())
-  title       String
-  description String
-  price       Float
-  userId      Int
-  user        User   @relation(fields: [userId], references: [id])
+  id               String               @id @default(uuid())
+  title            String               @db.VarChar(150)
+  slug             String               @unique @db.VarChar(150)
+  description      String               @db.Text
+  shortDescription String?              @db.VarChar(200)
+  image            String?              @db.VarChar(255)
+  previewVideo     String?              @db.VarChar(255)
+  price            Float                @default(0.0)
+  discountPrice    Float?
+  category         CourseCategory
+  level            CourseLevel          @default(BEGINNER)
+  status           CourseStatus         @default(DRAFT)
+  duration         Int?                 // in minutes
+  totalLessons     Int?                 @default(0)
+  language         String?              @default("English") @db.VarChar(50)
+  captions         Json?              
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  publishedAt      DateTime?
+  isDeleted        Boolean              @default(false)
+
+  // Relations
+  instructor       User                 @relation("InstructorCourses", fields: [instructorId], references: [id])
+  instructorId     String
+  enrollments      CourseEnrollment[]
+  modules          Module[]
+  reviews          CourseReview[]
+  requirements     CourseRequirement[]
+  outcomes         CourseOutcome[]
+  userProgress     UserProgress[]
+  certificates     Certificate[]
+  discussions      Discussion[]
+  quizzes          Quiz[]
+
+  @@index([instructorId])
+  @@index([category])
+  @@index([status], name: "courses_status_idx")
+  @@index([createdAt], name: "courses_created_at_idx")
+  @@map("courses")
+}
+
+model CourseEnrollment {
+  id               String   @id @default(uuid())
+  enrolledAt       DateTime @default(now())
+  completed        Boolean  @default(false)
+  completedAt      DateTime?
+  lastAccessed     DateTime?
+  paymentId        String?  @db.VarChar(100)
+  amountPaid       Float?
+  progress         Float?   @default(0)
+
+  // Relations
+  user             User     @relation(fields: [userId], references: [id])
+  userId           String
+  course           Course   @relation(fields: [courseId], references: [id])
+  courseId         String
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+  @@map("course_enrollments")
+}
+
+model Module {
+  id               String   @id @default(uuid())
+  title            String   @db.VarChar(100)
+  description      String?  @db.Text
+  order            Int      @default(0)
+  duration         Int?     // in minutes
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  course           Course   @relation(fields: [courseId], references: [id])
+  courseId         String
+  lessons          Lesson[]
+
+  @@index([courseId])
+  @@map("modules")
+}
+
+model Lesson {
+  id               String         @id @default(uuid())
+  title            String         @db.VarChar(150)
+  content          String?        @db.Text
+  videoUrl         String?        @db.VarChar(255)
+  duration         Int?           // in minutes
+  order            Int            @default(0)
+  isPreview        Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  // Relations
+  module           Module         @relation(fields: [moduleId], references: [id])
+  moduleId         String
+  progress         UserProgress[]
+  resources        LessonResource[]
+  quiz             Quiz?
+
+  @@index([moduleId])
+  @@map("lessons")
+}
+
+model UserProgress {
+  id               String    @id @default(uuid())
+  completed        Boolean   @default(false)
+  completedAt      DateTime?
+  watchedDuration  Int?      // in seconds
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // Relations
+  user             User      @relation(fields: [userId], references: [id])
+  userId           String
+  lesson           Lesson    @relation(fields: [lessonId], references: [id])
+  lessonId         String
+  course           Course    @relation(fields: [courseId], references: [id])
+  courseId         String
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([courseId])
+  @@index([lessonId])
+  @@map("user_progress")
+}
+
+// ========== COURSE CONTENT MODELS ==========
+model CourseRequirement {
+  id               String   @id @default(uuid())
+  text             String   @db.VarChar(255)
+  order            Int      @default(0)
+
+  // Relations
+  course           Course   @relation(fields: [courseId], references: [id])
+  courseId         String
+
+  @@index([courseId])
+  @@map("course_requirements")
+}
+
+model CourseOutcome {
+  id               String   @id @default(uuid())
+  text             String   @db.VarChar(255)
+  order            Int      @default(0)
+
+  // Relations
+  course           Course   @relation(fields: [courseId], references: [id])
+  courseId         String
+
+  @@index([courseId])
+  @@map("course_outcomes")
+}
+
+model CourseReview {
+  id               String   @id @default(uuid())
+  rating           Int      @default(5) // 1-5 scale
+  content          String?  @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  user             User     @relation(fields: [userId], references: [id])
+  userId           String
+  course           Course   @relation(fields: [courseId], references: [id])
+  courseId         String
+
+  @@index([userId])
+  @@index([courseId])
+  @@map("course_reviews")
+}
+
+model Certificate {
+  id               String   @id @default(uuid())
+  issuedAt         DateTime @default(now())
+  certificateUrl   String   @db.VarChar(255)
+  verificationCode String   @unique @db.VarChar(50)
+
+  // Relations
+  user             User     @relation(fields: [userId], references: [id])
+  userId           String
+  course           Course   @relation(fields: [courseId], references: [id])
+  courseId         String
+
+  @@index([userId])
+  @@index([courseId])
+  @@map("certificates")
+}
+
+model LessonResource {
+  id               String   @id @default(uuid())
+  name             String   @db.VarChar(100)
+  url              String   @db.VarChar(255)
+  type             String   @db.VarChar(20) // 'file', 'link', 'document'
+  createdAt        DateTime @default(now())
+
+  // Relations
+  lesson           Lesson   @relation(fields: [lessonId], references: [id])
+  lessonId         String
+
+  @@index([lessonId])
+  @@map("lesson_resources")
+}
+
+// ========== DISCUSSION MODELS ==========
+model Discussion {
+  id               String            @id @default(uuid())
+  title            String            @db.VarChar(150)
+  content          String            @db.Text
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // Relations
+  user             User              @relation(fields: [userId], references: [id])
+  userId           String
+  course           Course            @relation(fields: [courseId], references: [id])
+  courseId         String
+  replies          DiscussionReply[]
+
+  @@index([userId])
+  @@index([courseId])
+  @@map("discussions")
+}
+
+model DiscussionReply {
+  id               String      @id @default(uuid())
+  content          String      @db.Text
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  // Relations
+  user             User        @relation(fields: [userId], references: [id])
+  userId           String
+  discussion       Discussion  @relation(fields: [discussionId], references: [id])
+  discussionId     String
+
+  @@index([userId])
+  @@index([discussionId])
+  @@map("discussion_replies")
+}
+
+// ========== QUIZ MODELS ==========
+model Quiz {
+  id               String          @id @default(uuid())
+  title            String          @db.VarChar(150)
+  passingScore     Int             @default(70) // percentage
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  // Relations
+  lesson           Lesson?         @relation(fields: [lessonId], references: [id])
+  lessonId         String?
+  course           Course          @relation(fields: [courseId], references: [id])
+  courseId         String
+  questions        QuizQuestion[]
+  attempts         QuizAttempt[]
+
+  @@index([courseId])
+  @@index([lessonId])
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id               String          @id @default(uuid())
+  question         String          @db.Text
+  options          Json            // Array of strings
+  correctAnswer    Int             // Index of correct answer
+  explanation      String?         @db.Text
+  order            Int             @default(0)
+
+  // Relations
+  quiz             Quiz            @relation(fields: [quizId], references: [id])
+  quizId           String
+
+  @@index([quizId])
+  @@map("quiz_questions")
+}
+
+model QuizAttempt {
+  id               String          @id @default(uuid())
+  score            Float
+  completedAt      DateTime        @default(now())
+  answers          Json            // User's answers
+  isPassed         Boolean
+
+  // Relations
+  user             User            @relation(fields: [userId], references: [id])
+  userId           String
+  quiz             Quiz            @relation(fields: [quizId], references: [id])
+  quizId           String
+
+  @@index([userId])
+  @@index([quizId])
+  @@map("quiz_attempts")
 }

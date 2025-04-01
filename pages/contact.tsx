@@ -7,9 +7,14 @@ import { useState } from "react";
 
 export default function Contact() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMapOpen, setIsMapOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const toggleMap = () => {
+    setIsMapOpen(!isMapOpen);
   };
 
   return (
@@ -125,10 +130,11 @@ export default function Contact() {
 
           {/* Address */}
           <motion.div 
-            className="bg-white p-8 rounded-lg shadow-lg text-center hover:shadow-xl transition-shadow backdrop-blur-sm bg-opacity-70"
+            className="bg-white p-8 rounded-lg shadow-lg text-center hover:shadow-xl transition-shadow backdrop-blur-sm bg-opacity-70 cursor-pointer"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
+            onClick={toggleMap}
           >
             <div className="bg-purple-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto hover:bg-purple-200 transition-all">
               <svg className="w-6 h-6 text-purple-600 hover:text-purple-700 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,6 +188,28 @@ export default function Contact() {
           </motion.div>
         </div>
       </section>
+
+      {/* Map Modal */}
+      {isMapOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-4xl">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3153.8354345093747!2d144.9537353153166!3d-37.816279742021665!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6ad642af0f11fd81%3A0xf577d2a7c5e4a6c1!2s123%20Learning%20St%2C%20Knowledge%20City%20VIC%203000%2C%20Australia!5e0!3m2!1sen!2sus!4v1622549400000!5m2!1sen!2sus"
+              width="100%"
+              height="450"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+            ></iframe>
+            <button
+              onClick={toggleMap}
+              className="mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-all"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* CTA Section */}
       <motion.section 
