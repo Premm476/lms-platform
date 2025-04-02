@@ -1,26 +1,24 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
-import prisma from "@/lib/prisma"; // Using the centralized Prisma client instance
+import prisma from "@/lib/prisma";
+import { User } from "@/types/user";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse<User | { error: string; details?: string }>
 ) {
   try {
-    // 1. Verify the request method (keeping from old version)
     if (req.method !== "GET") {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    // 2. Get the user session (simplified from new version)
     const session = await getServerSession(req, res, authOptions);
     
     if (!session?.user?.email) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // 3. Fetch user from database (using select from both versions)
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: { 
@@ -28,7 +26,16 @@ export default async function handler(
         role: true,
         name: true,
         email: true,
-        // Add any additional fields needed from old version
+        emailVerified: true,
+        agreedToTerms: true,
+        avatar: true,
+        bio: true,
+        verificationToken: true,
+        resetToken: true,
+        resetTokenExpires: true,
+        createdAt: true,
+        updatedAt: true,
+        deletedAt: true
       }
     });
 
@@ -36,11 +43,15 @@ export default async function handler(
       return res.status(404).json({ error: "User not found" });
     }
 
-    // 4. Return the user data (simplified response from new version)
-    return res.status(200).json(user);
+    // Convert emailVerified to boolean if it's a Date
+    const userResponse = {
+      ...user,
+      emailVerified: user.emailVerified !== null ? true : false
+    };
+
+    return res.status(200).json(userResponse);
 
   } catch (error) {
-    // Enhanced error handling from old version
     console.error("Error in /api/auth/user:", error);
     return res.status(500).json({ 
       error: "Internal server error",

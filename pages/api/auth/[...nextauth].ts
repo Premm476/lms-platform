@@ -1,4 +1,5 @@
-import NextAuth, { type NextAuthOptions, DefaultSession } from 'next-auth'
+// pages/api/auth/[...nextauth].ts
+import NextAuth, { type NextAuthOptions, DefaultSession, DefaultUser } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import prisma from '@/lib/prisma'
@@ -7,12 +8,12 @@ import { compare } from 'bcryptjs'
 type UserRole = 'STUDENT' | 'INSTRUCTOR' | 'ADMIN'
 
 declare module 'next-auth' {
-  interface User {
+  interface User extends DefaultUser {
     id: string
     name?: string | null
     email?: string | null
     role: UserRole
-    emailVerified?: Date | null
+    emailVerified?: Date | boolean | null
     avatar?: string | null
     bio?: string | null
     enrollments?: Array<{
@@ -34,7 +35,7 @@ declare module 'next-auth' {
       name?: string | null
       email?: string | null
       role: UserRole
-      emailVerified?: Date | null
+      emailVerified?: boolean | null
       avatar?: string | null
       bio?: string | null
       enrollments?: Array<{
@@ -58,7 +59,7 @@ declare module 'next-auth/jwt' {
     name?: string | null
     email?: string | null
     role: UserRole
-    emailVerified?: Date | null
+    emailVerified?: boolean | null
     avatar?: string | null
     bio?: string | null
     enrollments?: Array<{
@@ -91,9 +92,7 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findFirst({
           where: {
-            email: {
-              equals: credentials.email.toLowerCase(),
-            }
+            email: credentials.email.toLowerCase(),
           },
           include: {
             enrollments: {
@@ -110,7 +109,6 @@ export const authOptions: NextAuthOptions = {
                 title: true,
                 enrollments: {
                   select: {
-                    id: true,
                     userId: true
                   }
                 }
@@ -128,13 +126,19 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials')
         }
 
-        // Transform the user object to match our User type
+        // Convert emailVerified to boolean or null
+        const emailVerified = user.emailVerified !== null 
+          ? (typeof user.emailVerified === 'object' 
+              ? true 
+              : Boolean(user.emailVerified))
+          : null;
+
         return {
           id: user.id,
           name: user.name,
           email: user.email,
           role: user.role as UserRole,
-          emailVerified: user.emailVerified,
+          emailVerified,
           avatar: user.avatar,
           bio: user.bio,
           enrollments: user.enrollments,
@@ -154,7 +158,11 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role
         token.email = user.email
         token.name = user.name
-        token.emailVerified = user.emailVerified
+        token.emailVerified = user.emailVerified !== null 
+          ? (typeof user.emailVerified === 'object' 
+              ? true 
+              : Boolean(user.emailVerified))
+          : null;
         token.avatar = user.avatar
         token.bio = user.bio
         token.enrollments = user.enrollments
@@ -168,34 +176,24 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role
         session.user.email = token.email
         session.user.name = token.name
-        session.user.emailVerified = token.emailVerified
+        session.user.emailVerified = token.emailVerified ?? null
         session.user.avatar = token.avatar
         session.user.bio = token.bio
         session.user.enrollments = token.enrollments
         session.user.taughtCourses = token.taughtCourses
       }
       return session
-    },
-    async redirect({ url, baseUrl }) {
-      if (url.includes('/login')) {
-        return `${baseUrl}/dashboard`
-      }
-      if (url.startsWith('/')) return `${baseUrl}${url}`
-      else if (new URL(url).origin === baseUrl) return url
-      return baseUrl
     }
   },
   pages: {
     signIn: '/login',
     signOut: '/logout',
     error: '/auth/error',
-    verifyRequest: '/auth/verify-request',
     newUser: '/welcome'
   },
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
-    updateAge: 24 * 60 * 60, // 24 hours
   },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development'
